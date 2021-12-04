@@ -4,10 +4,10 @@ import torch
 import numpy as np
 
 TEST_GAMES_COUNT = 200
-TEST_GAMES_LIMIT = 900
+TEST_GAMES_LIMIT = 1200
 TRAIN_GAMES_COUNT = 10000
 TRAIN_BATCH_SIZE = 100
-TRAIN_GAMES_LIMIT = 300
+TRAIN_GAMES_LIMIT = 1200
 RANDOM_MOVES = 6
 np.random.seed(3)
 
@@ -25,6 +25,30 @@ class RandomPolicy:
         total_weight = sum([f.weight for f in figs])
         score = field.add_random(figs, np.random.randint(1, 10000))
         return None if score < total_weight else field, score, 1
+
+class TrivialPolicy:
+    def play(self, field, figs, need_choice = False):
+        field = field.copy()
+        figs = [figures[f] for f in figs]
+        total_weight = sum([f.weight for f in figs])
+        if need_choice:
+            next_fields, choices, score = field.get_all_next(figs, True)
+        else:
+            next_fields, score = field.get_all_next(figs)
+        if score < total_weight:
+            return (None, None, score, 0) if need_choice else (None, score, 0)
+        if len(next_fields) == 1:
+            best = 0
+        else:
+            t = next_fields.to_numpy('int8')
+            t = t.reshape(-1,81)
+            t = np.sum(t, axis=1)
+            best = int(np.argmin(t))
+        if need_choice:
+            return next_fields[best], choices[best], score, len(next_fields)
+        else:
+            return next_fields[best], score, len(next_fields)
+
 
 def evaluate_policy(policy):
     total_score = 0
@@ -156,9 +180,9 @@ def train_policy(policy):
             total_alternatives = 0
 
 if __name__ == '__main__':
-    policy = TorchPolicy()#('57.6k.torch')
-    val = evaluate_policy(policy)
-    print(f'Pre training val: {val}')
+    policy = TorchPolicy('990.torch')
+    #val = evaluate_policy(policy)
+    #print(f'Pre training val: {val}')
     train_policy(policy)
-    val = evaluate_policy(policy)
-    print(f'Post training val: {val}')
+    #val = evaluate_policy(policy)
+    #print(f'Post training val: {val}')
