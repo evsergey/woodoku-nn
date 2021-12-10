@@ -2,7 +2,7 @@ import pywood
 import train
 
 field = pywood.Field()
-policy = train.TorchPolicy('870.torch')
+policy = train.TorchPolicy('1700.torch')
 figures = list([str(f) for f in train.figures])
 figs = None
 def next(a, b, c):

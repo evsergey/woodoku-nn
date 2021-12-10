@@ -140,6 +140,13 @@ namespace pywood
             throw std::exception("Bad dtype");
         return result;
     }
+
+    void shrink(std::vector<Field>& fields, size_t expected_size)
+    {
+        std::random_device dev;
+        std::default_random_engine rng(dev());
+        Field::random_shrink(fields, expected_size, rng);
+    }
 }
 
 BOOST_PYTHON_MODULE(pywood)
@@ -161,6 +168,7 @@ BOOST_PYTHON_MODULE(pywood)
         .def(vector_indexing_suite<std::vector<Figure>>())
         ;
     class_<Field>("Field")
+        .def(init<std::string>())
         .def("__str__", &pywood::to_string<Field>)
         .def("__repr__", &pywood::to_string<Field>)
         .add_property("weight", &Field::weight)
@@ -179,6 +187,7 @@ BOOST_PYTHON_MODULE(pywood)
         .def("clear", +[](std::vector<Field>& fields) { fields.clear(); })
         .def("to_numpy", &pywood::to_numpy)
         .def("to_numpy", +[](const std::vector<Field>& fields) { return pywood::to_numpy(fields, np::dtype::get_builtin<double>()); })
+        .def("shrink", &pywood::shrink)
         ;
     class_<Choice>("Choice")
         .def("__str__", &::pywood::to_string<Choice>)

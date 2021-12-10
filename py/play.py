@@ -4,7 +4,7 @@ import train
 import numpy as np
 
 GAME = np.random.randint(len(train.figures), size=300)
-policy = train.TorchPolicy('57.6k.torch')
+policy = train.TorchPolicy('1700.torch')
 field = pywood.Field()
 field.add_random([train.figures[f] for f in GAME[:3]])
 triples = GAME[3:].reshape(-1, 3)

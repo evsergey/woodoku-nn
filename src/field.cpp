@@ -1,6 +1,7 @@
 #include "field.h"
 #include <cassert>
 #include <memory_resource>
+#include <random>
 
 std::ostream& operator<< (std::ostream& str, const Choice& choice)
 {
@@ -27,6 +28,18 @@ std::ostream& operator<< (std::ostream& str, const Choice& choice)
 Field::Field()
 {
     rows.fill(~uint32_t(511));
+}
+
+Field::Field(const std::string& text) : Field()
+{
+    size_t pos = 0;
+    for (auto ch : text)
+        if (ch == 'x')
+        {
+            rows[pos / 9] |= 1 << (pos % 9);
+            ++pos;
+        } else if (ch == '.' && ++pos == 81)
+            break;
 }
 
 void Field::add(const Figure& figure, size_t row, int32_t col_pow2)
@@ -317,3 +330,12 @@ DEFCOPYTOI(16)
 DEFCOPYTOI(32)
 DEFCOPYTOI(64)
 
+void Field::random_shrink(std::vector<Field>& fields, size_t expected_size, std::default_random_engine& rng)
+{
+    if (expected_size >= fields.size())
+        return;
+    std::uniform_int_distribution<size_t> distr(0, fields.size() - 1);
+    std::erase_if(fields, [&rng, distr, expected_size](const auto&) { return distr(rng) > expected_size; });
+    if (fields.size() > expected_size)
+        fields.resize(expected_size);
+}

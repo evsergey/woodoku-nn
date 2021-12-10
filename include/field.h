@@ -23,6 +23,7 @@ class Field
 
 public:
     Field();
+    Field(const std::string& text);
 
     void add(const Figure& figure, size_t row, int32_t col_pow2);
     bool add_random(const Figure& figure, std::default_random_engine& rng);
@@ -32,6 +33,7 @@ public:
         return get_all_next({ std::ref(a), std::ref(b), std::ref(c) }, score, choices);
     }
 
+    static void random_shrink(std::vector<Field>& fields, size_t expected_size, std::default_random_engine& rng);
     template<class T>
     static void copy_to(const std::vector<Field>& fields, T* data);
     size_t count_placements(const Figure& figure) const;

@@ -32,5 +32,14 @@
     <CopyFileToFolders Include="py\train.py">
       <Filter>py</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="py\cheat.py">
+      <Filter>py</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="train2.py">
+      <Filter>py</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="gradinit.py">
+      <Filter>py</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
 </Project>
