@@ -112,7 +112,8 @@ int32_t Field::get_row_mask(const Figure& figure, size_t row) const
     return mask;
 }
 
-void Field::find_all_placements(const Figure& figure, std::invocable<size_t, int32_t> auto callback) const
+template<class T>
+void Field::find_all_placements(const Figure& figure, T callback) const
 {
     for (size_t row = 0; row < 10 - figure.nrows; ++row)
         for (int32_t mask = ~get_row_mask(figure, row); mask;)

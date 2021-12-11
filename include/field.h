@@ -43,6 +43,7 @@ public:
     void print_choice(std::ostream& str, const std::array<std::reference_wrapper<const Figure>, 3>& tri_fig, Choice choice) const;
 
 private:
-    void find_all_placements(const Figure& figure, std::invocable<size_t, int32_t> auto callback) const;
+    template<class T>
+    void find_all_placements(const Figure& figure, T callback) const;
     int32_t get_row_mask(const Figure& figure, size_t row) const;
 };
