@@ -1,7 +1,8 @@
 # woodoku-nn
 
 Build steps:
-	$ mkdir build
-	$ cd build
-	$ cmake ..
-	$ cmake --build .
+
+    $ mkdir build
+    $ cd build
+    $ cmake ..
+    $ cmake --build .
