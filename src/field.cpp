@@ -303,7 +303,7 @@ void Field::print_choice(std::ostream& str, const std::array<std::reference_wrap
             break;
         if (i != 2)
             str << std::endl;
-        f.print_placement(str, tri_fig[n], row, col, unsigned char('1' + n));
+        f.print_placement(str, tri_fig[n], row, col, static_cast<unsigned char>('1' + n));
         f.add(tri_fig[n], row, 1 << col);
     }
 }
@@ -336,7 +336,7 @@ void Field::random_shrink(std::vector<Field>& fields, size_t expected_size, std:
     if (expected_size >= fields.size())
         return;
     std::uniform_int_distribution<size_t> distr(0, fields.size() - 1);
-    std::erase_if(fields, [&rng, distr, expected_size](const auto&) { return distr(rng) > expected_size; });
+    std::erase_if(fields, [&rng, &distr, expected_size](const auto&) { return distr(rng) > expected_size; });
     if (fields.size() > expected_size)
         fields.resize(expected_size);
 }

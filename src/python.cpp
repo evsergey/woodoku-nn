@@ -137,7 +137,7 @@ namespace pywood
         CHECK_AND_COPY_I(16)
         CHECK_AND_COPY_I(32)
         CHECK_AND_COPY_I(64)
-            throw std::exception("Bad dtype");
+            throw std::runtime_error("Bad dtype");
         return result;
     }
 
