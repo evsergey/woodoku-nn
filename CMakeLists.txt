@@ -11,7 +11,7 @@ set_property(TARGET woodoku PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(Boost_FOUND AND PythonLibs_FOUND)
     add_library(pywood SHARED src/python.cpp)
-    if (MSVC)
+    if (WIN32)
         set_target_properties(pywood PROPERTIES SUFFIX ".pyd")
     endif()
     set_target_properties(pywood PROPERTIES PREFIX "")
