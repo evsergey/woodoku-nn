@@ -9,6 +9,20 @@
 #include <iostream>
 #include <random>
 
+auto tik()
+{
+    static auto t = std::chrono::high_resolution_clock::now();
+    const auto old_t = t;
+    t = std::chrono::high_resolution_clock::now();
+    return old_t;
+}
+
+auto& tok(std::ostream& str)
+{
+    auto dt = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - tik()).count();
+    return str << dt << " us";
+}
+
 int main()
 {
     Field field;
@@ -28,6 +42,7 @@ int main()
     std::default_random_engine rng(rd());
     std::uniform_int_distribution<size_t> distr(0, figures.size() - 1);
     auto model = torch::jit::load("model.torch", device);
+    model.eval();
     std::cout << "Scripted model loaded" << std::endl;
     std::vector<Choice> choices;
     size_t total_score = 0;
@@ -48,10 +63,9 @@ int main()
         for (auto& fig : figs)
             std::cout << fig << "---" << std::endl;
         size_t score;
-        auto t = std::chrono::high_resolution_clock::now();
+        tik();
         auto fields = field.get_all_next(figs, score, &choices);
-        auto dt = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count();
-        std::cout << "Alternatives: " << fields.size() << ". Time: " << dt << " us" << std::endl;
+        std::cout << "Alternatives: " << fields.size() << ". Search: " << tok;
         total_score += score;
         if (fields.empty())
             break;
@@ -60,15 +74,15 @@ int main()
         using namespace torch::indexing;
         auto input = tensor.index({ Slice(None, fields.size()), Slice(), Slice() }).to(device);
         std::vector<torch::jit::IValue> inputs{ input };
-        t = std::chrono::high_resolution_clock::now();
+        tik();
         auto output = model.forward(inputs).toTensor();
-        dt = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - t).count();
+        std::cout << ". Evaluation: " << tok << std::endl;
         const auto best = static_cast<size_t>(output[1].item<float>());
         const auto& choice = choices[best];
         field.print_choice(std::cout, figs, choice);
         field = fields[best];
-        std::cout << "Score: " << total_score << ". Inference time: " << dt
-            << " us\n=======================" << std::endl;
+        std::cout << "Score: " << total_score
+            << "\n=======================" << std::endl;
     }
     std::cout << "Total moves: " << move << ". Total score: " << total_score << std::endl;
 }
