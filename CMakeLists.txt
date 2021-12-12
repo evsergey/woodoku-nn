@@ -2,11 +2,12 @@ cmake_minimum_required(VERSION 3.5)
 project(woodoku VERSION 1.0.0.0 LANGUAGES CXX)
 find_package(PythonLibs)
 find_package(Boost CONFIG COMPONENTS python numpy)
+find_package(Torch)
 
 set(CMAKE_CXX_STANDARD 20)
 include_directories(include)
 
-add_library(woodoku STATIC src/field.cpp src/figure.cpp)
+add_library(woodoku STATIC src/field.cpp src/figure.cpp include/field.h include/figure.h)
 set_property(TARGET woodoku PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(Boost_FOUND AND PythonLibs_FOUND)
@@ -20,10 +21,27 @@ if(Boost_FOUND AND PythonLibs_FOUND)
     target_link_libraries(pywood PRIVATE woodoku Boost::python Boost::numpy ${PYTHON_LIBRARIES})
 endif()
 
-add_executable(woodoku_test src/woodoku.cpp)
-target_link_libraries(woodoku_test PRIVATE woodoku)
-add_custom_command(
-  TARGET woodoku_test POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy 
-    ${CMAKE_CURRENT_SOURCE_DIR}/figures.txt 
-    $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+if(Torch_FOUND)
+    add_executable(woodoku_test src/woodoku.cpp)
+    target_link_libraries(woodoku_test PRIVATE woodoku ${TORCH_LIBRARIES})
+    set_property(TARGET woodoku_test PROPERTY CXX_STANDARD 14)
+    target_compile_options(woodoku_test PRIVATE ${TORCH_CXX_FLAGS})
+    add_custom_command(
+      TARGET woodoku_test POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+        ${CMAKE_CURRENT_SOURCE_DIR}/figures.txt 
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    add_custom_command(
+      TARGET woodoku_test POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+        ${CMAKE_CURRENT_SOURCE_DIR}/trained/scripted_3000.torch 
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>/model.torch)
+    if(MSVC)
+      file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+      add_custom_command(TARGET woodoku_test
+                         POST_BUILD
+                         COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                         ${TORCH_DLLS}
+                         $<TARGET_FILE_DIR:woodoku_test>)
+    endif()
+endif()

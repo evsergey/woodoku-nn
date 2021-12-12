@@ -112,6 +112,21 @@ def train_model(model, fields, scores, test_fields, test_scores, shuffle=True, e
         torch.save(model.state_dict(), f'epoch{epoch}.torch')
         model.train()
 
+def save_model(model, file_name):
+    for param in model.parameters():
+        param.requires_grad = False
+    def solve(batch):
+        batch = torch.cat([batch, batch.rot90(1, [1, 2]), batch.rot90(2, [1, 2]), batch.rot90(3, [1, 2])])
+        batch = torch.cat([batch, batch.flip(1)])
+        predictions = model(batch)
+        predictions = predictions.reshape(8, -1)
+        predictions = predictions.sum(axis=0)
+        return torch.stack(torch.max(predictions, dim=0))
+    example = torch.rand((5, 9, 9))
+    script = torch.jit.trace(solve, example)
+    script.save(file_name)
+
+
 if __name__ == "__main__":
     #model.load_state_dict(torch.load('1700.torch'))
     data = load_data('games20k.torch')

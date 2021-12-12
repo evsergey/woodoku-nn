@@ -1,6 +1,5 @@
 #pragma once
 #include "figure.h"
-#include <concepts>
 #include <random>
 
 struct Choice
