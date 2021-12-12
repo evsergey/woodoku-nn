@@ -309,16 +309,18 @@ void Field::print_choice(std::ostream& str, const std::array<std::reference_wrap
 }
 
 template<class T>
-void Field::copy_to(const std::vector<Field>& fields, T* data)
+void Field::copy_to(const std::vector<Field>& fields, T* data, size_t start_index, size_t length)
 {
-    for (size_t i = 0; i < fields.size(); ++i)
+    if (length == 0)
+        length = fields.size() - start_index;
+    for (size_t i = 0; i < length; ++i)
         for (size_t row = 0; row < 9; ++row)
             for (size_t col = 0; col < 9; ++col)
-                data[i * 81 + row * 9 + col] = T((fields[i].rows[row] >> col) & 1);
+                data[i * 81 + row * 9 + col] = T((fields[i + start_index].rows[row] >> col) & 1);
 }
 
 #define DEFCOPYTO(TYPE) \
-    template void Field::copy_to<TYPE>(const std::vector<Field>& fields, TYPE* data);
+    template void Field::copy_to<TYPE>(const std::vector<Field>& fields, TYPE* data, size_t start_index, size_t length);
 DEFCOPYTO(double)
 DEFCOPYTO(float)
 

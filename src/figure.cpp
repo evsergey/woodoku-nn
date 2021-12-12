@@ -16,6 +16,23 @@ std::ostream& operator<< (std::ostream& str, const Figure& figure)
     return str;
 }
 
+std::ostream& operator<< (std::ostream& str, const std::array<std::reference_wrapper<const Figure>, 3>& tri_fig)
+{
+    size_t max_rows = 0;
+    for (const Figure& fig : tri_fig)
+        max_rows = std::max(max_rows, fig.nrows);
+
+    for (size_t row = 0; row < max_rows; ++row)
+    {
+        for (const Figure& fig : tri_fig)
+            for (size_t col = 0; col < fig.ncols + 3; ++col)
+                str.put(col >= fig.ncols || row >= fig.nrows ? ' ' : ((fig.rows[row] >> col) & 1) ? 'x' : '.');
+        str << std::endl;
+    }
+
+    return str;
+}
+
 std::size_t std::hash<Figure>::operator()(const Figure& figure) const
 {
     int64_t result = 0;

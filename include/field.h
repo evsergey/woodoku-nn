@@ -34,7 +34,7 @@ public:
 
     static void random_shrink(std::vector<Field>& fields, size_t expected_size, std::default_random_engine& rng);
     template<class T>
-    static void copy_to(const std::vector<Field>& fields, T* data);
+    static void copy_to(const std::vector<Field>& fields, T* data, size_t start_index = 0, size_t length = 0);
     size_t count_placements(const Figure& figure) const;
     bool has_placements(const Figure& figure) const;
     size_t weight() const;

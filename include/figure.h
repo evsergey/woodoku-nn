@@ -4,6 +4,7 @@
 #include <ostream>
 #include <istream>
 #include <unordered_set>
+#include <vector>
 
 struct Figure
 {
@@ -13,6 +14,7 @@ struct Figure
 };
 
 std::ostream& operator<< (std::ostream& str, const Figure& figure);
+std::ostream& operator<< (std::ostream& str, const std::array<std::reference_wrapper<const Figure>, 3>& tri_fig);
 
 template<> struct std::hash<Figure> { std::size_t operator()(const Figure&) const; };
 bool operator==(const Figure& lhs, const Figure& rhs);

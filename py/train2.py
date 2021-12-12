@@ -121,7 +121,7 @@ def save_model(model, file_name):
         predictions = model(batch)
         predictions = predictions.reshape(8, -1)
         predictions = predictions.sum(axis=0)
-        return torch.stack(torch.max(predictions, dim=0))
+        return predictions
     example = torch.rand((5, 9, 9))
     script = torch.jit.trace(solve, example)
     script.save(file_name)

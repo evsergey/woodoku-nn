@@ -4,5 +4,5 @@ Build steps:
 
     $ mkdir build
     $ cd build
-    $ cmake ..
+    $ Torch_DIR=<path to libtorch> cmake -DCMAKE_CXX_COMPILER=<compiler> -DCUDA_TOOLKIT_ROOT_DIR=<path to CUDA> ..
     $ cmake --build .
