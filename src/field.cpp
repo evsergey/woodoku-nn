@@ -308,8 +308,23 @@ void Field::print_choice(std::ostream& str, const std::array<std::reference_wrap
     }
 }
 
+void Field::copy_to(const std::vector<Field>& fields, int32_t* data, size_t start_index, size_t length)
+{
+    if (length == 0)
+        length = fields.size() - start_index;
+    for (size_t i = 0; i < length; ++i)
+    {
+        const auto& field = fields[i + start_index];
+        for (size_t j = 0; j < 3; ++j)
+            data[i * 3 + j] =
+                field.rows[j * 3] & 511 |
+                ((field.rows[j * 3 + 1] & 511) << 9) |
+                ((field.rows[j * 3 + 2] & 511) << 18);
+    }
+}
+
 template<class T>
-void Field::copy_to(const std::vector<Field>& fields, T* data, size_t start_index, size_t length)
+void Field::convert_to(const std::vector<Field>& fields, T* data, size_t start_index, size_t length)
 {
     if (length == 0)
         length = fields.size() - start_index;
@@ -320,7 +335,7 @@ void Field::copy_to(const std::vector<Field>& fields, T* data, size_t start_inde
 }
 
 #define DEFCOPYTO(TYPE) \
-    template void Field::copy_to<TYPE>(const std::vector<Field>& fields, TYPE* data, size_t start_index, size_t length);
+    template void Field::convert_to<TYPE>(const std::vector<Field>& fields, TYPE* data, size_t start_index, size_t length);
 DEFCOPYTO(double)
 DEFCOPYTO(float)
 

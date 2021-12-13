@@ -110,7 +110,7 @@ namespace pywood
     void copy_to_numpy(np::ndarray& out, const std::vector<Field>& fields)
     {
         T* data = reinterpret_cast<T*>(out.get_data());
-        Field::copy_to(fields, data);
+        Field::convert_to(fields, data);
     }
 
     template<class T>
@@ -138,6 +138,15 @@ namespace pywood
         CHECK_AND_COPY_I(32)
         CHECK_AND_COPY_I(64)
             throw std::runtime_error("Bad dtype");
+        return result;
+    }
+    np::ndarray to_numpy0(const std::vector<Field>& fields, object dtype)
+    {
+        tuple shape = make_tuple(fields.size(), 3);
+        np::dtype dt = np::dtype::get_builtin<int32_t>();
+        auto result = np::zeros(shape, dt);
+        auto data = reinterpret_cast<int32_t*>(result.get_data());
+        Field::copy_to(fields, data);
         return result;
     }
 
@@ -186,7 +195,7 @@ BOOST_PYTHON_MODULE(pywood)
         .def(vector_indexing_suite<std::vector<Field>>())
         .def("clear", +[](std::vector<Field>& fields) { fields.clear(); })
         .def("to_numpy", &pywood::to_numpy)
-        .def("to_numpy", +[](const std::vector<Field>& fields) { return pywood::to_numpy(fields, np::dtype::get_builtin<double>()); })
+        .def("to_numpy", &pywood::to_numpy0)
         .def("shrink", &pywood::shrink)
         ;
     class_<Choice>("Choice")

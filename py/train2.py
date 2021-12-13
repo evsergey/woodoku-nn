@@ -115,14 +115,16 @@ def train_model(model, fields, scores, test_fields, test_scores, shuffle=True, e
 def save_model(model, file_name):
     for param in model.parameters():
         param.requires_grad = False
+    mask = 2 ** torch.arange(0, 27, dtype = torch.int32)
     def solve(batch):
+        batch = batch.reshape(-1, 1).bitwise_and(mask).ne(0).reshape(-1, 9, 9).float()
         batch = torch.cat([batch, batch.rot90(1, [1, 2]), batch.rot90(2, [1, 2]), batch.rot90(3, [1, 2])])
         batch = torch.cat([batch, batch.flip(1)])
         predictions = model(batch)
         predictions = predictions.reshape(8, -1)
         predictions = predictions.sum(axis=0)
         return predictions
-    example = torch.rand((5, 9, 9))
+    example = torch.randint(0, 1<<27, (5, 3), dtype=torch.int32)
     script = torch.jit.trace(solve, example)
     script.save(file_name)
 

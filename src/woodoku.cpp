@@ -38,7 +38,7 @@ int main()
     }
     else
         std::cout << "CUDA is not avalable" << std::endl;
-    //torch::jit::getBailoutDepth() = 1;
+    torch::jit::getExecutorMode() = false;
     std::random_device rd;
     std::default_random_engine rng(rd());
     std::uniform_int_distribution<size_t> distr(0, figures.size() - 1);
@@ -47,10 +47,10 @@ int main()
     std::vector<Choice> choices;
     size_t total_score = 0;
     auto options = torch::
-        dtype(torch::kF32)
+        dtype(torch::kI32)
         .layout(torch::kStrided)
         .requires_grad(false);
-    torch::Tensor tensor = torch::empty({ 10000, 9, 9 }, options);
+    torch::Tensor tensor = torch::empty({ 10000, 3 }, options);
     size_t move;
     for (move = 1; ; ++move)
     {
@@ -71,7 +71,7 @@ int main()
         if (fields.empty())
             break;
         Field::random_shrink(fields, 10000, rng);
-        Field::copy_to<float>(fields, tensor.data<float>());
+        Field::copy_to(fields, tensor.data<int32_t>());
         using namespace torch::indexing;
         auto input = tensor.index({ Slice(None, fields.size()), None, None }).to(device);
         std::vector<torch::jit::IValue> inputs{ input };
