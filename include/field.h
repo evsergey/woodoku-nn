@@ -26,7 +26,7 @@ public:
 
     void add(const Figure& figure, size_t row, int32_t col_pow2);
     bool add_random(const Figure& figure, std::default_random_engine& rng);
-    std::vector<Field> get_all_next(const std::array<std::reference_wrapper<const Figure>, 3>& tri_fig, size_t& score, std::vector<Choice>* choices = nullptr) const;
+    std::vector<Field> get_all_next(const TriFigures& tri_fig, size_t& score, std::vector<Choice>* choices = nullptr) const;
     auto get_all_next(const Figure& a, const Figure& b, const Figure& c, size_t& score, std::vector<Choice>* choices = nullptr) const
     {
         return get_all_next({ std::ref(a), std::ref(b), std::ref(c) }, score, choices);

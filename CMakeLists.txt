@@ -22,10 +22,23 @@ if(Boost_FOUND AND PythonLibs_FOUND)
 endif()
 
 if(Torch_FOUND)
+    add_library(woodoku-solver SHARED src/solver.cpp include/solver.h)
+    set_property(TARGET woodoku-solver PROPERTY POSITION_INDEPENDENT_CODE ON)
+    set_property(TARGET woodoku-solver PROPERTY WINDOWS_EXPORT_ALL_SYMBOLS 1)
+    target_link_libraries(woodoku-solver PUBLIC woodoku ${TORCH_LIBRARIES})
+    set_property(TARGET woodoku-solver PROPERTY CXX_STANDARD 14)
+    target_compile_options(woodoku-solver PRIVATE ${TORCH_CXX_FLAGS})
+    if(MSVC)
+      file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
+      add_custom_command(TARGET woodoku-solver
+                         POST_BUILD
+                         COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                         ${TORCH_DLLS}
+                         $<TARGET_FILE_DIR:woodoku-solver>)
+    endif()
+
     add_executable(woodoku_test src/woodoku.cpp)
-    target_link_libraries(woodoku_test PRIVATE woodoku ${TORCH_LIBRARIES})
-    set_property(TARGET woodoku_test PROPERTY CXX_STANDARD 14)
-    target_compile_options(woodoku_test PRIVATE ${TORCH_CXX_FLAGS})
+    target_link_libraries(woodoku_test PRIVATE woodoku-solver)
     add_custom_command(
       TARGET woodoku_test POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different 
@@ -36,12 +49,4 @@ if(Torch_FOUND)
       COMMAND ${CMAKE_COMMAND} -E copy_if_different 
         ${CMAKE_CURRENT_SOURCE_DIR}/trained/scripted_3000.torch 
         $<TARGET_FILE_DIR:${PROJECT_NAME}>/model.torch)
-    if(MSVC)
-      file(GLOB TORCH_DLLS "${TORCH_INSTALL_PREFIX}/lib/*.dll")
-      add_custom_command(TARGET woodoku_test
-                         POST_BUILD
-                         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                         ${TORCH_DLLS}
-                         $<TARGET_FILE_DIR:woodoku_test>)
-    endif()
 endif()

@@ -1,8 +1,4 @@
-#include "figure.h"
-#include "field.h"
-
-#include <torch/torch.h>
-#include <torch/script.h>
+#include "solver.h"
 
 #include <chrono>
 #include <fstream>
@@ -25,36 +21,32 @@ auto& tok(std::ostream& str)
 
 int main()
 {
-    c10::InferenceMode guard;
     Field field;
     std::ifstream ifs("figures.txt");
     const auto figures = read_figures(ifs);
     std::cout << figures.size() << " figures loaded" << std::endl;
-    torch::Device device = torch::kCPU;
-    if (torch::cuda::is_available())
+    auto factory = create_solver_factory("model.torch");
+    std::shared_ptr<basic_solver> solver;
+    if (factory->get_cuda_count() > 0)
     {
-        device = torch::kCUDA;
-        std::cout << torch::cuda::device_count() << " CUDA device(s) found" << std::endl;
+        std::cout << factory->get_cuda_count() << " CUDA device(s) found" << std::endl;
+        solver = factory->get_cuda_solver(0);
     }
     else
+    {
         std::cout << "CUDA is not avalable" << std::endl;
-    torch::jit::getExecutorMode() = false;
+        solver = factory->get_cpu_solver();
+    }
+    std::cout << "Scripted model loaded" << std::endl;
     std::random_device rd;
     std::default_random_engine rng(rd());
     std::uniform_int_distribution<size_t> distr(0, figures.size() - 1);
-    auto model = torch::jit::load("model.torch", device);
-    std::cout << "Scripted model loaded" << std::endl;
     std::vector<Choice> choices;
     size_t total_score = 0;
-    auto options = torch::
-        dtype(torch::kI32)
-        .layout(torch::kStrided)
-        .requires_grad(false);
-    torch::Tensor tensor = torch::empty({ 10000, 3 }, options);
     size_t move;
     for (move = 1; ; ++move)
     {
-        const std::array<std::reference_wrapper<const Figure>, 3> figs = {
+        const TriFigures figs = {
             std::cref(figures[distr(rng)]),
             std::cref(figures[distr(rng)]),
             std::cref(figures[distr(rng)])
@@ -71,13 +63,8 @@ int main()
         if (fields.empty())
             break;
         Field::random_shrink(fields, 10000, rng);
-        Field::copy_to(fields, tensor.data<int32_t>());
-        using namespace torch::indexing;
-        auto input = tensor.index({ Slice(None, fields.size()), None, None }).to(device);
-        std::vector<torch::jit::IValue> inputs{ input };
         tik();
-        auto output = model.forward(inputs).toTensor().argmax();
-        const auto best = static_cast<size_t>(output.item<int>());
+        auto best = solver->choose_best(fields);
         std::cout << ". Evaluation: " << tok << std::endl;
         const auto& choice = choices[best];
         field.print_choice(std::cout, figs, choice);

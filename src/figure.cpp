@@ -16,7 +16,7 @@ std::ostream& operator<< (std::ostream& str, const Figure& figure)
     return str;
 }
 
-std::ostream& operator<< (std::ostream& str, const std::array<std::reference_wrapper<const Figure>, 3>& tri_fig)
+std::ostream& operator<< (std::ostream& str, const TriFigures& tri_fig)
 {
     size_t max_rows = 0;
     for (const Figure& fig : tri_fig)

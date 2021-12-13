@@ -155,7 +155,7 @@ bool Field::add_random(const Figure& figure, std::default_random_engine& rng)
     return true;
 }
 
-std::vector<Field> Field::get_all_next(const std::array<std::reference_wrapper<const Figure>, 3>& tri_fig, size_t& score, std::vector<Choice>* choices) const
+std::vector<Field> Field::get_all_next(const TriFigures& tri_fig, size_t& score, std::vector<Choice>* choices) const
 {
     if (choices != nullptr)
         choices->clear();
@@ -290,7 +290,7 @@ void Field::print_placement(std::ostream& str, const Figure& figure, size_t row,
     }
 }
 
-void Field::print_choice(std::ostream& str, const std::array<std::reference_wrapper<const Figure>, 3>& tri_fig, Choice choice) const
+void Field::print_choice(std::ostream& str, const TriFigures& tri_fig, Choice choice) const
 {
     Field f = *this;
     for (int i = 2; i >= 0; --i)
