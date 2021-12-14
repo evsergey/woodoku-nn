@@ -19,7 +19,6 @@ namespace
             , _device(device)
             , _inputs(1)
         {
-            _model.to(device);
             auto options = torch::
                 dtype(torch::kI32)
                 .layout(torch::kStrided)
@@ -29,6 +28,7 @@ namespace
 
         size_t choose_best(const std::vector<Field>& fields) final
         {
+            c10::InferenceMode guard;
             Field::copy_to(fields, _tensor.data<int32_t>(), 0, std::min((size_t)10000, fields.size()));
             using namespace torch::indexing;
             _inputs[0] = _tensor.index({ Slice(None, fields.size()), None, None }).to(_device);
@@ -76,7 +76,7 @@ namespace
                 if (!_loaded_model)
                     _models[index] = _loaded_model = std::make_shared<torch::jit::Module>(torch::jit::load(_file_name, device));
                 else if (!_models[index])
-                    _models[index] = std::make_shared<torch::jit::Module>(_loaded_model->deepcopy());
+                    (_models[index] = std::make_shared<torch::jit::Module>(_loaded_model->deepcopy()))->to(device);
             }
             return std::make_shared<solver>(*_models[index], device);
         }

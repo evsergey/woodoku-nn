@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(woodoku VERSION 1.0.0.0 LANGUAGES CXX)
 find_package(PythonLibs)
-find_package(Boost CONFIG COMPONENTS python numpy)
+find_package(Boost CONFIG COMPONENTS python numpy program_options)
 find_package(Torch)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -49,4 +49,11 @@ if(Torch_FOUND)
       COMMAND ${CMAKE_COMMAND} -E copy_if_different 
         ${CMAKE_CURRENT_SOURCE_DIR}/trained/scripted_3000.torch 
         $<TARGET_FILE_DIR:${PROJECT_NAME}>/model.torch)
+
+    if(Boost_FOUND)
+        add_executable(woodoku_games src/play_games.cpp)
+        target_compile_definitions(woodoku_games PRIVATE BOOST_PROGRAM_OPTIONS_STATIC_LIB)
+        target_include_directories(woodoku_games PRIVATE ${Boost_INCLUDE_DIRS})
+        target_link_libraries(woodoku_games PUBLIC woodoku-solver Boost::program_options)
+    endif()
 endif()

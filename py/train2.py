@@ -9,32 +9,40 @@ cpu = torch.device('cpu')
 def load_data(file_name = 'games.torch', shuffle=True):
     data = torch.load(file_name, map_location=cpu)
     fields = data['fields']
+    mask = 2 ** torch.arange(0, 27, dtype = torch.int32)
+    fields = fields.reshape(-1, 1).bitwise_and(mask).ne(0).reshape(-1, 9, 9).float()
     scores = data['scores']
     scores = torch.log(scores)
     std_scores, mean_scores = torch.std_mean(scores)
     scores = (scores - mean_scores) / std_scores
     print(f'Loaded: {fields.shape[0]} positions. Mean log scores value: {mean_scores.item()}. Std: {std_scores.item()}')
-    fields = torch.cat([fields, fields.rot90(1, [1, 2]), fields.rot90(2, [1, 2]), fields.rot90(3, [1, 2])])
-    fields = torch.cat([fields, fields.flip(1)])
-    if 'broadcast_to' in dir(torch):
-        scores = torch.broadcast_to(scores, (8, scores.shape[0])).reshape(-1, 1)
-    else:
-        scores = torch.cat([scores]*8).reshape(-1, 1)
-    print(f'Augmented to: {fields.shape[0]} positions')
-    if shuffle:
-        perm = torch.randperm(fields.shape[0])
-        fields = fields[perm, :, :]
-        scores = scores[perm, :]
-        del perm
-        print('Random permute completed')
-    test_size = fields.shape[0] // 20000 * 1000
-    train_size = fields.shape[0] // 1000 * 1000
+    test_size = fields.shape[0] // 2500 * 125
+    train_size = fields.shape[0] // 125 * 125
     test_fields = fields[-test_size:train_size,:,:]
     test_scores = scores[-test_size:train_size,:]
     fields = fields[:-test_size,:,:]
     scores = scores[:-test_size,:]
     train_size -= test_size
     print(f'Train size: {train_size}. Test size: {test_size}')
+    fields = torch.cat([fields, fields.rot90(1, [1, 2]), fields.rot90(2, [1, 2]), fields.rot90(3, [1, 2])])
+    fields = torch.cat([fields, fields.flip(1)])
+    test_fields = torch.cat([test_fields, test_fields.rot90(1, [1, 2]), test_fields.rot90(2, [1, 2]), test_fields.rot90(3, [1, 2])])
+    test_fields = torch.cat([test_fields, test_fields.flip(1)])
+    if 'broadcast_to' in dir(torch):
+        scores = torch.broadcast_to(scores, (8, scores.shape[0])).reshape(-1, 1)
+        test_scores = torch.broadcast_to(test_scores, (8, test_scores.shape[0])).reshape(-1, 1)
+    else:
+        scores = torch.cat([scores]*8).reshape(-1, 1)
+        test_scores = torch.cat([test_scores]*8).reshape(-1, 1)
+    test_size *= 8
+    train_size *= 8
+    print(f'Augmented to: {train_size + test_size} positions')
+    if shuffle:
+        perm = torch.randperm(fields.shape[0])
+        fields = fields[perm, :, :]
+        scores = scores[perm, :]
+        del perm
+        print('Random permute completed')
     return fields, scores, test_fields, test_scores
 
 model = torch.nn.Sequential(
@@ -48,25 +56,8 @@ model = torch.nn.Sequential(
     torch.nn.Linear(64, 8),
     torch.nn.ReLU(),
     torch.nn.Linear(8, 1),
-#    torch.nn.Softplus()
     )
 
-#model = torch.nn.Sequential(OrderedDict([
-#    ('flatten', torch.nn.Flatten()),
-#    ('linear1', torch.nn.Linear(81, 512)),
-#    ('dropout1', torch.nn.Dropout(p=0.5)),
-#    ('relu1', torch.nn.ReLU()),
-#    ('linear2', torch.nn.Linear(512, 512)),
-#    ('dropout2', torch.nn.Dropout(p=0.5)),
-#    ('relu2', torch.nn.ReLU()),
-#    ('linear3', torch.nn.Linear(512, 64)),
-#    ('dropout3', torch.nn.Dropout(p=0.3)),
-#    ('relu3', torch.nn.ReLU()),
-#    ('linear4', torch.nn.Linear(64, 8)),
-#    ('dropout4', torch.nn.Dropout(p=0.2)),
-#    ('relu4', torch.nn.ReLU()),
-#    ('linear5', torch.nn.Linear(8, 1))
-#    ]))
 EPOCH_NUMBER = 50
 BATCH_SIZE = 100
 
@@ -97,7 +88,6 @@ def train_model(model, fields, scores, test_fields, test_scores, shuffle=True, e
             pred = model(x)
             loss = loss_fn(pred, y)
             total_loss += loss.item()
-            #loss = torch.mean(torch.square(pred-y)/(pred + y + 0.1)) # loss_fn(pred, y)
             loss.backward()
             optimizer.step()
             if (batch+1)%1000 == 0:
